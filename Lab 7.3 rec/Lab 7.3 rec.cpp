@@ -2,10 +2,8 @@
 #include <iomanip>
 #include <time.h>
 using namespace std;
-int countColumnsWithZero(int** a, int numRows, int numColumns, int column, int& count);
-void FindRowWithLongestSeries(int** arr, int rowCount, int colCount, int& rowWithLongestSeries, int& maxSeriesLength);
-void FindRowWithLongestSeriesRecursive(int** arr, int rowCount, int colCount, int i, int j, int currentSeriesLength, int& maxSeriesLength, int& rowWithLongestSeries);
-void FindRowWithLongestSeries(int** arr, int rowCount, int colCount, int& rowWithLongestSeries, int& maxSeriesLength);
+void FindRowWithLongestSeries(int** arr, int rowCount, int colCount, int i, int j, int currentSeriesLength, int& rowWithLongestSeries, int& maxSeriesLength);
+int countColumnsWithZero(int** a, int numRows, int numColumns, int j, int i, int count, bool Haszero);
 void PrintRow(int** a, const int rowNo, const int colCount, int colNo)
 {
 	cout << setw(4) << a[rowNo][colNo];
@@ -65,15 +63,14 @@ int main()
 	int** a = new int* [rowCount];
 	for (int i = 0; i < rowCount; i++)
 		a[i] = new int[colCount];
-	// CreateRows(a, rowCount, colCount, Low, High, 0);
+	 CreateRows(a, rowCount, colCount, Low, High, 0);
 	InputRows(a, rowCount, colCount, 0);
 	PrintRows(a, rowCount, colCount, 0);
 
-	int count = 0;
-	countColumnsWithZero(a, rowCount, colCount, 0, count);
+	int count = countColumnsWithZero(a, rowCount, colCount, 0, 0, 0, false);
 	int longestSeriesRow = -1;
 	int maxSeriesLength = 0;
-	FindRowWithLongestSeries(a, rowCount, colCount, longestSeriesRow, maxSeriesLength);
+	FindRowWithLongestSeries(a, rowCount, colCount, 0, 0, 1, longestSeriesRow, maxSeriesLength);
 	cout << "Longest Series Row:               " << longestSeriesRow << endl;
 	cout << "Count of Columns which include 0: " << count << endl;
 	for (int i = 0; i < rowCount; i++)
@@ -82,50 +79,38 @@ int main()
 	return 0;
 }
 
-int countColumnsWithZero(int** a, int numRows, int numColumns, int column, int& count) {
-	if (column == numColumns) {
-		return count;
+int countColumnsWithZero(int** a, int numRows, int numColumns, int j = 0, int i = 0, int count = 0, bool Haszero = false) {
+	if (j < numColumns) {
+		if (i < numRows) {
+			if (a[i][j] == 0) {
+				Haszero = true;
+			}
+			if (Haszero) count++;
+			return countColumnsWithZero(a, numRows, numColumns, j, i + 1, count, Haszero = false);
+		}
+
+		return countColumnsWithZero(a, numRows, numColumns, j + 1, 0, count, Haszero = false);
 	}
 
-	bool hasZero = false;
-	for (int i = 0; i < numRows; i++) {
-		if (a[i][column] == 0) {
-			hasZero = true;
-			break;
+	return count;
+}
+void FindRowWithLongestSeries(int** arr, int rowCount, int colCount, int i, int j, int currentSeriesLength, int& rowWithLongestSeries, int& maxSeriesLength) {
+	if (i == rowCount) {
+		return;
+	}
+	if (j == colCount) {
+		FindRowWithLongestSeries(arr, rowCount, colCount, i + 1, 1, 1, rowWithLongestSeries, maxSeriesLength);
+		return;
+	}
+	if (arr[i][j] == arr[i][j - 1]) {
+		currentSeriesLength++;
+		if (currentSeriesLength > maxSeriesLength) {
+			maxSeriesLength = currentSeriesLength;
+			rowWithLongestSeries = i;
 		}
 	}
-
-	if (hasZero) {
-		count++;
+	else {
+		currentSeriesLength = 1;
 	}
-
-	return countColumnsWithZero(a, numRows, numColumns, column + 1, count);
-}
-
-void FindRowWithLongestSeriesRecursive(int** arr, int rowCount, int colCount, int i, int j, int currentSeriesLength, int& maxSeriesLength, int& rowWithLongestSeries) {
-    if (i == rowCount) {
-        return;  // Всі рядки перевірено
-    }
-
-    if (j == colCount) {
-        // Перевірка рядка завершена, переходимо до наступного рядка
-        if (currentSeriesLength > maxSeriesLength) {
-            maxSeriesLength = currentSeriesLength;
-            rowWithLongestSeries = i;
-        }
-        FindRowWithLongestSeriesRecursive(arr, rowCount, colCount, i + 1, 1, 1, maxSeriesLength, rowWithLongestSeries);
-    } else {
-        if (arr[i][j] == arr[i][j - 1]) {
-            // Знайдено однакові елементи
-            currentSeriesLength++;
-        } else {
-            // Послідовність порушена
-            currentSeriesLength = 1;
-        }
-        FindRowWithLongestSeriesRecursive(arr, rowCount, colCount, i, j + 1, currentSeriesLength, maxSeriesLength, rowWithLongestSeries);
-    }
-}
-
-void FindRowWithLongestSeries(int** arr, int rowCount, int colCount, int& rowWithLongestSeries, int& maxSeriesLength) {
-	FindRowWithLongestSeriesRecursive(arr, rowCount, colCount, 0, 1, 1, maxSeriesLength, rowWithLongestSeries);
+	FindRowWithLongestSeries(arr, rowCount, colCount, i, j + 1, currentSeriesLength, rowWithLongestSeries, maxSeriesLength);
 }
